@@ -41,11 +41,7 @@ LOGGER = logging.getLogger(__name__)
 
 DEVICE_ATTRIBUTES = [
     "_is_guest_by_uap",
-    "ap_mac",
     "authorized",
-    "bssid",
-    "ccq",
-    "channel",
     "essid",
     "hostname",
     "ip",
@@ -54,14 +50,11 @@ DEVICE_ATTRIBUTES = [
     "is_wired",
     "mac",
     "name",
-    "noise",
     "noted",
     "oui",
     "qos_policy_applied",
     "radio",
     "radio_proto",
-    "rssi",
-    "signal",
     "site_id",
     "vlan",
 ]
@@ -301,7 +294,7 @@ class UniFiDeviceTracker(ScannerEntity):
             CONF_DETECTION_TIME, DEFAULT_DETECTION_TIME
         )
 
-        if self.device.last_seen and (
+        if self.device.state == 1 and (
             dt_util.utcnow() - dt_util.utc_from_timestamp(float(self.device.last_seen))
             < detection_time
         ):
@@ -346,15 +339,18 @@ class UniFiDeviceTracker(ScannerEntity):
     @property
     def device_state_attributes(self):
         """Return the device state attributes."""
-        if not self.device.last_seen:
+        if self.device.state == 0:
             return {}
 
         attributes = {}
 
-        attributes["upgradable"] = self.device.upgradable
-        attributes["overheating"] = self.device.overheating
-
         if self.device.has_fan:
             attributes["fan_level"] = self.device.fan_level
+
+        if self.device.overheating:
+            attributes["overheating"] = self.device.overheating
+
+        if self.device.upgradable:
+            attributes["upgradable"] = self.device.upgradable
 
         return attributes
